@@ -1,0 +1,84 @@
+# Build using lightweight docker in docker image
+image: theyorkshiredev/docker-slim:latest
+
+# Since we building docker images within a docker container we need the
+# docker in docker service.
+services:
+  - docker:dind
+
+stages:
+  - build
+  - test
+  - publish
+  - release
+
+# Log in to Gitlab's docker registry
+before_script:
+  - export COMMIT_IMAGE=$( echo $CI_REGISTRY/$CI_PROJECT_PATH:$CI_COMMIT_SHA | tr '[:upper:]' '[:lower:]' )
+  - export TAGGED_IMAGE=$( echo $CI_REGISTRY/$CI_PROJECT_PATH:$CI_COMMIT_TAG | tr '[:upper:]' '[:lower:]' )
+  - export GITHUB_URL=https://TheYorkshireDev:${GITHUB_TOKEN}@github.com/TheYorkshireDev/dockerfile-linter.git
+  - export RELEASE_URL=https://registry.hub.docker.com/u/theyorkshiredev/dockerfile-linter/trigger/$DOCKERHUB_TOKEN/
+
+# Group Docker login commands
+.log_into_docker : &log_into_docker |
+  docker info
+  docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+# Build our docker image and push to Gitlab's registry
+build:
+  stage: build
+  script:
+    - *log_into_docker
+    - docker build --pull -t $COMMIT_IMAGE .
+    - docker push $COMMIT_IMAGE
+
+# Test our docker image and verify that the container runs and anything supposed to be installed is
+test_installed_apps:
+  stage: test
+  script:
+    - *log_into_docker
+    - docker pull $COMMIT_IMAGE
+    - docker run -i $COMMIT_IMAGE /bin/sh -c 'node --version'
+    - docker run -i $COMMIT_IMAGE /bin/sh -c 'npm --version'
+    - docker run -i $COMMIT_IMAGE /bin/sh -c "dockerfilelint 'FROM image:1.0.0'"
+
+# Lint our Dockerfile
+lint_dockerfile:
+  image: theyorkshiredev/docker-dockerlint:latest
+  stage: test
+  script:
+    - dockerfilelint Dockerfile
+
+# If the build is on master mirror on GitHub
+github_publish:
+  image: theyorkshiredev/git-container:latest
+  stage: publish
+  script:
+    - echo "Publish to Github."
+    - git remote add github "$GITHUB_URL"
+    - git push github master --follow-tags
+  only:
+    - master
+
+# If the build has a tag, then use it to tag the docker image
+publish:
+  stage: publish
+  script:
+    - *log_into_docker
+    - docker pull $COMMIT_IMAGE
+    - docker tag $COMMIT_IMAGE $TAGGED_IMAGE
+    - docker push $TAGGED_IMAGE
+  only:
+    - tags
+
+# If the publish to github completed, release the image on dockerhub
+dockerhub_release:
+  image: theyorkshiredev/trigger-dockerhub-build:latest
+  stage: release
+  script:
+    - echo "Release to Dockerhub."
+    - release $CI_COMMIT_TAG $RELEASE_URL
+  only:
+    - tags
+  dependencies:
+    - github_publish
