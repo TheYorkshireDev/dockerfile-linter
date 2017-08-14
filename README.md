@@ -2,6 +2,21 @@
 
 A containerised instance of [`replicatedhq/dockerfilelint`](https://github.com/replicatedhq/dockerfilelint), which is a Dockerfile linter. You can see it in action within this project's CI pipeline.
 
+## Usage
+
+Simply run `dockerfilelint Dockerfile` in the same directory as your Dockerfile
+
+In our pipeline the linter is used as shown below.
+
+```
+# Lint our Dockerfile
+lint_dockerfile:
+  image: theyorkshiredev/dockerfile-linter:latest
+  stage: test
+  script:
+    - dockerfilelint Dockerfile
+```
+
 ## Build & Release Status
 
 ### Build

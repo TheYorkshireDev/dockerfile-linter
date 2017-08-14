@@ -44,7 +44,7 @@ test_installed_apps:
 
 # Lint our Dockerfile
 lint_dockerfile:
-  image: theyorkshiredev/docker-dockerlint:latest
+  image: theyorkshiredev/dockerfile-linter:latest
   stage: test
   script:
     - dockerfilelint Dockerfile
