@@ -4,6 +4,6 @@
 # (c) 2017 - Steven Cooney
 #############################################################################
 
-FROM theyorkshiredev/npm-container:0.1.0
+FROM theyorkshiredev/npm-container:1.0.0
 
 RUN npm install dockerfilelint -g
