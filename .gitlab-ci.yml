@@ -40,7 +40,7 @@ test_installed_apps:
     - docker pull $COMMIT_IMAGE
     - docker run -i $COMMIT_IMAGE /bin/sh -c 'node --version'
     - docker run -i $COMMIT_IMAGE /bin/sh -c 'npm --version'
-    - docker run -i $COMMIT_IMAGE /bin/sh -c "dockerfilelint 'FROM image:1.0.0'"
+    - docker run -i $COMMIT_IMAGE /bin/sh -c 'dockerfilelint --version'
 
 # Lint our Dockerfile
 lint_dockerfile:

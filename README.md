@@ -1,6 +1,6 @@
 # Containerised Dockerfile Linter
 
-A containerised instance of [`replicatedhq/dockerfilelint`](https://github.com/replicatedhq/dockerfilelint), which is a Dockerfile linter. You can see it in action within this project's CI pipeline.
+A containerised instance of [`replicatedhq/dockerfilelint`](https://github.com/replicatedhq/dockerfilelint) version 1.4.0, which is a Dockerfile linter. You can see it in action within this project's CI pipeline.
 
 ## Usage
 
